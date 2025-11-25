@@ -60,4 +60,32 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// DELETE FORM (Protected)
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid form ID format" });
+    }
+
+    const form = await Form.findById(id);
+
+    if (!form) {
+      return res.status(404).json({ message: "Form not found" });
+    }
+
+    // Verify ownership
+    if (form.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this form" });
+    }
+
+    await Form.findByIdAndDelete(id);
+
+    res.json({ message: "Form deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete form" });
+  }
+});
+
 export default router;
