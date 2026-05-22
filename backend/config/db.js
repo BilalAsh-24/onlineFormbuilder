@@ -3,9 +3,12 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
 
+// Default DB_TYPE to 'mongodb' to ensure zero-config cloud deployment (Render)
+const dbType = process.env.DB_TYPE || "mongodb";
+
 let sequelize = null;
 
-if (process.env.DB_TYPE === "mysql" || !process.env.DB_TYPE) {
+if (dbType === "mysql") {
   if (process.env.DATABASE_URL) {
     sequelize = new Sequelize(process.env.DATABASE_URL, {
       dialect: "mysql",
@@ -26,7 +29,6 @@ if (process.env.DB_TYPE === "mysql" || !process.env.DB_TYPE) {
 }
 
 export const connectDB = async () => {
-  const dbType = process.env.DB_TYPE || "mysql";
   if (dbType === "mongodb") {
     console.log("Connecting to MongoDB Atlas...");
     await mongoose.connect(process.env.MONGO_URI);

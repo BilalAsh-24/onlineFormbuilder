@@ -1,10 +1,10 @@
 import sequelize from "./config/db.js";
-import User from "./models/User.js";
-import Form from "./models/Form.js";
-import Question from "./models/Question.js";
-import Option from "./models/Option.js";
-import Response from "./models/Response.js";
-import Answer from "./models/Answer.js";
+import User from "./models/mysql/User.js";
+import Form from "./models/mysql/Form.js";
+import Question from "./models/mysql/Question.js";
+import Option from "./models/mysql/Option.js";
+import Response from "./models/mysql/Response.js";
+import Answer from "./models/mysql/Answer.js";
 
 async function clearDatabase() {
     try {

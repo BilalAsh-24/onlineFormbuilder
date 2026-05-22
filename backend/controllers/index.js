@@ -1,17 +1,19 @@
+const dbType = process.env.DB_TYPE || "mongodb";
+
 export const getAuthController = async () => {
-  return process.env.DB_TYPE === "mongodb"
+  return dbType === "mongodb"
     ? import("./mongodb/auth.controller.js")
     : import("./mysql/auth.controller.js");
 };
 
 export const getFormController = async () => {
-  return process.env.DB_TYPE === "mongodb"
+  return dbType === "mongodb"
     ? import("./mongodb/form.controller.js")
     : import("./mysql/form.controller.js");
 };
 
 export const getResponseController = async () => {
-  return process.env.DB_TYPE === "mongodb"
+  return dbType === "mongodb"
     ? import("./mongodb/response.controller.js")
     : import("./mysql/response.controller.js");
 };
