@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../config/db.js";
+import sequelize from "../../config/db.js";
 import Form from "./Form.js";
 
 const Response = sequelize.define(

@@ -6,7 +6,7 @@ import {
   getRespondentResponse,
   updateRespondentResponse,
   deleteRespondentResponse,
-} from "../controllers/response.controller.js";
+} from "../controllers/index.js";
 
 const router = express.Router();
 

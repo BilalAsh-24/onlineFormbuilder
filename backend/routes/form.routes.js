@@ -1,6 +1,6 @@
 import express from "express";
 import { verifyToken } from "../middleware/auth.middleware.js";
-import { getMyForms, createForm, getFormById, updateForm, deleteForm } from "../controllers/form.controller.js";
+import { getMyForms, createForm, getFormById, updateForm, deleteForm } from "../controllers/index.js";
 
 const router = express.Router();
 

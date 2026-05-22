@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import sequelize from "./config/db.js";
+import { connectDB } from "./config/db.js";
 
 // Routes
 import authRoutes from "./routes/auth.routes.js";
@@ -23,10 +23,13 @@ app.use("/api/responses", responseRoutes);
 // Start Server + Sync Database
 const PORT = process.env.PORT || 8000;
 
-sequelize
-  .sync({ alter: true })
+connectDB()
   .then(() => {
-    console.log("MySQL Connected & Synced Successfully 👍");
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT} [DB_TYPE=${process.env.DB_TYPE || "mysql"}]`)
+    );
   })
-  .catch((err) => console.error("Database Sync Error:", err));
+  .catch((err) => {
+    console.error("Database Connection/Sync Error:", err);
+    process.exit(1);
+  });

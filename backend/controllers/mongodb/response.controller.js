@@ -1,28 +1,25 @@
-import Response from "../models/Response.js";
-import Answer from "../models/Answer.js";
-import Question from "../models/Question.js";
+import Response from "../../models/mongodb/Response.js";
+import Form from "../../models/mongodb/Form.js";
 
 export const submitResponse = async (req, res) => {
   try {
     const formId = req.params.id;
     const { respondentEmail, answers } = req.body;
 
-    const response = await Response.create({
+    const answersData = answers.map((ans) => ({
+      question_id: ans.question_id,
+      answer_text: ans.answer,
+    }));
+
+    await Response.create({
       form_id: formId,
       respondent_email: respondentEmail,
+      answers: answersData,
     });
-
-    for (const ans of answers) {
-      await Answer.create({
-        response_id: response.response_id,
-        question_id: ans.question_id,
-        answer_text: ans.answer,
-      });
-    }
 
     res.status(201).json({ message: "Response submitted" });
   } catch (error) {
-    console.error("SUBMIT RESPONSE ERROR:", error);
+    console.error("SUBMIT RESPONSE ERROR (MONGO):", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -31,33 +28,29 @@ export const getResponses = async (req, res) => {
   try {
     const formId = req.params.id;
 
-    const responses = await Response.findAll({
-      where: { form_id: formId },
-      include: [
-        {
-          model: Answer,
-          include: [
-            {
-              model: Question,
-              attributes: ["question_text"],
-            },
-          ],
-        },
-      ],
-    });
+    // Fetch the form to map question IDs to question text
+    const form = await Form.findById(formId);
+    const qMap = {};
+    if (form) {
+      form.questions.forEach((q) => {
+        qMap[q._id.toString()] = q.question_text;
+      });
+    }
+
+    const responses = await Response.find({ form_id: formId });
 
     const formatted = responses.map((r) => ({
       respondentEmail: r.respondent_email,
       submittedAt: r.submitted_at,
-      answers: r.Answers.map((a) => ({
-        questionText: a.Question.question_text,
+      answers: r.answers.map((a) => ({
+        questionText: qMap[a.question_id] || "Unknown Question",
         answer: a.answer_text,
       })),
     }));
 
     res.json(formatted);
   } catch (error) {
-    console.error("GET RESPONSES ERROR:", error);
+    console.error("GET RESPONSES ERROR (MONGO):", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -72,12 +65,8 @@ export const getRespondentResponse = async (req, res) => {
     }
 
     const response = await Response.findOne({
-      where: { form_id: formId, respondent_email: email },
-      include: [
-        {
-          model: Answer,
-        },
-      ],
+      form_id: formId,
+      respondent_email: email,
     });
 
     if (!response) {
@@ -85,9 +74,9 @@ export const getRespondentResponse = async (req, res) => {
     }
 
     const formatted = {
-      responseId: response.response_id,
+      responseId: response._id.toString(),
       respondentEmail: response.respondent_email,
-      answers: response.Answers.map((a) => ({
+      answers: response.answers.map((a) => ({
         question_id: a.question_id,
         answer: a.answer_text,
       })),
@@ -95,7 +84,7 @@ export const getRespondentResponse = async (req, res) => {
 
     res.json(formatted);
   } catch (error) {
-    console.error("GET RESPONDENT RESPONSE ERROR:", error);
+    console.error("GET RESPONDENT RESPONSE ERROR (MONGO):", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -110,33 +99,29 @@ export const updateRespondentResponse = async (req, res) => {
     }
 
     let response = await Response.findOne({
-      where: { form_id: formId, respondent_email: respondentEmail },
+      form_id: formId,
+      respondent_email: respondentEmail,
     });
+
+    const answersData = answers.map((ans) => ({
+      question_id: ans.question_id,
+      answer_text: ans.answer,
+    }));
 
     if (!response) {
       response = await Response.create({
         form_id: formId,
         respondent_email: respondentEmail,
+        answers: answersData,
       });
-    }
-
-    // Delete existing answers for this response
-    await Answer.destroy({
-      where: { response_id: response.response_id },
-    });
-
-    // Create new answers
-    for (const ans of answers) {
-      await Answer.create({
-        response_id: response.response_id,
-        question_id: ans.question_id,
-        answer_text: ans.answer,
-      });
+    } else {
+      response.answers = answersData;
+      await response.save();
     }
 
     res.json({ message: "Response updated successfully" });
   } catch (error) {
-    console.error("UPDATE RESPONDENT RESPONSE ERROR:", error);
+    console.error("UPDATE RESPONDENT RESPONSE ERROR (MONGO):", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -151,25 +136,19 @@ export const deleteRespondentResponse = async (req, res) => {
     }
 
     const response = await Response.findOne({
-      where: { form_id: formId, respondent_email: email },
+      form_id: formId,
+      respondent_email: email,
     });
 
     if (!response) {
       return res.status(404).json({ message: "Response not found" });
     }
 
-    // Delete answers first
-    await Answer.destroy({
-      where: { response_id: response.response_id },
-    });
-
-    // Delete the response
-    await response.destroy();
+    await Response.findByIdAndDelete(response._id);
 
     res.json({ message: "Response deleted successfully" });
   } catch (error) {
-    console.error("DELETE RESPONDENT RESPONSE ERROR:", error);
+    console.error("DELETE RESPONDENT RESPONSE ERROR (MONGO):", error);
     res.status(500).json({ message: "Server error" });
   }
 };
-

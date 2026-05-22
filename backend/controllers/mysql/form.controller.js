@@ -1,6 +1,6 @@
-import Form from "../models/Form.js";
-import Question from "../models/Question.js";
-import Option from "../models/Option.js";
+import Form from "../../models/mysql/Form.js";
+import Question from "../../models/mysql/Question.js";
+import Option from "../../models/mysql/Option.js";
 
 export const getMyForms = async (req, res) => {
   try {
@@ -167,7 +167,7 @@ export const deleteForm = async (req, res) => {
 
     // Delete all answers for questions in this form
     if (questionIds.length > 0) {
-      const Answer = (await import("../models/Answer.js")).default;
+      const Answer = (await import("../../models/mysql/Answer.js")).default;
       const deletedAnswers = await Answer.destroy({
         where: { question_id: questionIds },
       });
@@ -181,7 +181,7 @@ export const deleteForm = async (req, res) => {
     }
 
     // Delete all responses for this form
-    const Response = (await import("../models/Response.js")).default;
+    const Response = (await import("../../models/mysql/Response.js")).default;
     const deletedResponses = await Response.destroy({
       where: { form_id: formId },
     });
