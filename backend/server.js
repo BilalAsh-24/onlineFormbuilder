@@ -20,6 +20,15 @@ app.use("/api/auth", authRoutes);
 app.use("/api/forms", formRoutes);
 app.use("/api/responses", responseRoutes);
 
+// Root Health Check Route
+app.get("/", (req, res) => {
+  res.json({
+    status: "healthy",
+    message: "FormBuilder API is running successfully!",
+    database: process.env.DB_TYPE || "mongodb"
+  });
+});
+
 // Start Server + Sync Database
 const PORT = process.env.PORT || 8000;
 
