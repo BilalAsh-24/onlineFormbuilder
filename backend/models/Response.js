@@ -1,25 +1,18 @@
-import mongoose from "mongoose";
+import { DataTypes } from "sequelize";
+import sequelize from "../config/db.js";
+import Form from "./Form.js";
 
-const responseSchema = new mongoose.Schema({
-  form: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Form",
-    required: true,
+const Response = sequelize.define(
+  "Response",
+  {
+    response_id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    respondent_email: { type: DataTypes.STRING },
+    submitted_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   },
-  respondentEmail: {
-    type: String,
-    required: true,
-  },
-  answers: [
-    {
-      questionText: String,
-      answer: String,
-    },
-  ],
-  submittedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: false }
+);
 
-export default mongoose.model("Response", responseSchema);
+Form.hasMany(Response, { foreignKey: "form_id" });
+Response.belongsTo(Form, { foreignKey: "form_id" });
+
+export default Response;

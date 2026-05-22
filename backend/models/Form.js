@@ -1,36 +1,20 @@
-import mongoose from "mongoose";
+import { DataTypes } from "sequelize";
+import sequelize from "../config/db.js";
+import User from "./User.js";
 
-const formSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
+const Form = sequelize.define(
+  "Form",
+  {
+    form_id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    title: { type: DataTypes.STRING, allowNull: false },
+    description: { type: DataTypes.TEXT },
+    created_by: { type: DataTypes.INTEGER, allowNull: false },
+    expires_at: { type: DataTypes.DATE },
   },
-  description: String,
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  questions: [
-    {
-      questionText: String,
-      questionType: {
-        type: String,
-        enum: ["text", "multipleChoice"],
-        default: "text",
-      },
-      options: [String],
-      required: {
-        type: Boolean,
-        default: false,
-      },
-    },
-  ],
-  expiresAt: Date,
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: false }
+);
 
-export default mongoose.model("Form", formSchema);
+User.hasMany(Form, { foreignKey: "created_by" });
+Form.belongsTo(User, { foreignKey: "created_by" });
+
+export default Form;
