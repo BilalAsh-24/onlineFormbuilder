@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
 });
 
 // Start Server + Sync Database
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 10000;
 
 connectDB()
   .then(() => {
