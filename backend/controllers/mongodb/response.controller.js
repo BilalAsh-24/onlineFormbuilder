@@ -6,6 +6,20 @@ export const submitResponse = async (req, res) => {
     const formId = req.params.id;
     const { respondentEmail, answers } = req.body;
 
+    // Load the Form to check if multiple responses are allowed
+    const form = await Form.findById(formId);
+    if (!form) return res.status(404).json({ message: "Form not found" });
+
+    if (form.allow_multiple_responses === false) {
+      const existing = await Response.findOne({
+        form_id: formId,
+        respondent_email: respondentEmail,
+      });
+      if (existing) {
+        return res.status(400).json({ message: "You have already submitted a response for this form." });
+      }
+    }
+
     const answersData = answers.map((ans) => ({
       question_id: ans.question_id,
       answer_text: ans.answer,

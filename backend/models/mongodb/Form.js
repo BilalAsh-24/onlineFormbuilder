@@ -17,6 +17,7 @@ const FormSchema = new mongoose.Schema(
     description: { type: String, default: "" },
     created_by: { type: String, required: true },
     expires_at: { type: Date, default: null },
+    allow_multiple_responses: { type: Boolean, default: true },
     questions: [QuestionSchema],
   },
   {

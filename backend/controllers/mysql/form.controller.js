@@ -8,7 +8,15 @@ export const getMyForms = async (req, res) => {
       where: { created_by: req.userId },
       order: [["form_id", "DESC"]],
     });
-    res.json(forms);
+    const formatted = forms.map((f) => ({
+      form_id: f.form_id,
+      title: f.title,
+      description: f.description,
+      created_by: f.created_by,
+      expires_at: f.expires_at,
+      allowMultipleResponses: f.allow_multiple_responses,
+    }));
+    res.json(formatted);
   } catch (error) {
     console.error("GET MY FORMS ERROR:", error);
     res.status(500).json({ message: "Server error" });
@@ -17,13 +25,14 @@ export const getMyForms = async (req, res) => {
 
 export const createForm = async (req, res) => {
   try {
-    const { title, description, questions, expiresAt } = req.body;
+    const { title, description, questions, expiresAt, allowMultipleResponses } = req.body;
 
     const form = await Form.create({
       title,
       description,
       created_by: req.userId,
       expires_at: expiresAt || null,
+      allow_multiple_responses: allowMultipleResponses !== undefined ? allowMultipleResponses : true,
     });
 
     for (const q of questions) {
@@ -70,7 +79,27 @@ export const getFormById = async (req, res) => {
     if (!form)
       return res.status(404).json({ message: "Form not found" });
 
-    res.json(form);
+    const formatted = {
+      form_id: form.form_id,
+      title: form.title,
+      description: form.description,
+      created_by: form.created_by,
+      expires_at: form.expires_at,
+      allowMultipleResponses: form.allow_multiple_responses,
+      Questions: form.Questions.map((q) => ({
+        question_id: q.question_id,
+        question_text: q.question_text,
+        question_type: q.question_type,
+        required: q.required,
+        form_id: form.form_id,
+        Options: q.Options.map((opt) => ({
+          option_id: opt.option_id,
+          option_text: opt.option_text,
+          question_id: q.question_id,
+        })),
+      })),
+    };
+    res.json(formatted);
   } catch (error) {
     console.error("GET FORM ERROR:", error);
     res.status(500).json({ message: "Server error" });
@@ -80,7 +109,7 @@ export const getFormById = async (req, res) => {
 export const updateForm = async (req, res) => {
   try {
     const formId = req.params.id;
-    const { title, description, questions, expiresAt } = req.body;
+    const { title, description, questions, expiresAt, allowMultipleResponses } = req.body;
 
     // Find the form and verify ownership
     const form = await Form.findOne({
@@ -100,6 +129,7 @@ export const updateForm = async (req, res) => {
       title,
       description,
       expires_at: expiresAt || null,
+      allow_multiple_responses: allowMultipleResponses !== undefined ? allowMultipleResponses : true,
     });
 
     // Delete existing questions (cascade will delete options)

@@ -11,6 +11,7 @@ export const getMyForms = async (req, res) => {
       description: f.description,
       created_by: f.created_by,
       expires_at: f.expires_at,
+      allowMultipleResponses: f.allow_multiple_responses,
     }));
 
     res.json(formatted);
@@ -22,7 +23,7 @@ export const getMyForms = async (req, res) => {
 
 export const createForm = async (req, res) => {
   try {
-    const { title, description, questions, expiresAt } = req.body;
+    const { title, description, questions, expiresAt, allowMultipleResponses } = req.body;
 
     const questionsData = questions.map((q) => ({
       question_text: q.questionText,
@@ -36,6 +37,7 @@ export const createForm = async (req, res) => {
       description,
       created_by: req.userId,
       expires_at: expiresAt || null,
+      allow_multiple_responses: allowMultipleResponses !== undefined ? allowMultipleResponses : true,
       questions: questionsData,
     });
 
@@ -59,6 +61,7 @@ export const getFormById = async (req, res) => {
       description: form.description,
       created_by: form.created_by,
       expires_at: form.expires_at,
+      allowMultipleResponses: form.allow_multiple_responses,
       Questions: form.questions.map((q) => ({
         question_id: q._id.toString(),
         question_text: q.question_text,
@@ -83,7 +86,7 @@ export const getFormById = async (req, res) => {
 export const updateForm = async (req, res) => {
   try {
     const formId = req.params.id;
-    const { title, description, questions, expiresAt } = req.body;
+    const { title, description, questions, expiresAt, allowMultipleResponses } = req.body;
 
     const form = await Form.findById(formId);
     if (!form) {
@@ -104,6 +107,7 @@ export const updateForm = async (req, res) => {
     form.title = title;
     form.description = description;
     form.expires_at = expiresAt || null;
+    form.allow_multiple_responses = allowMultipleResponses !== undefined ? allowMultipleResponses : true;
     form.questions = questionsData;
 
     await form.save();

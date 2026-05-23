@@ -10,6 +10,7 @@ const Form = sequelize.define(
     description: { type: DataTypes.TEXT },
     created_by: { type: DataTypes.INTEGER, allowNull: false },
     expires_at: { type: DataTypes.DATE },
+    allow_multiple_responses: { type: DataTypes.BOOLEAN, defaultValue: true },
   },
   { timestamps: false }
 );

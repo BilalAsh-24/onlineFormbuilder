@@ -1,11 +1,25 @@
 import Response from "../../models/mysql/Response.js";
 import Answer from "../../models/mysql/Answer.js";
 import Question from "../../models/mysql/Question.js";
+import Form from "../../models/mysql/Form.js";
 
 export const submitResponse = async (req, res) => {
   try {
     const formId = req.params.id;
     const { respondentEmail, answers } = req.body;
+
+    // Load the Form to check if multiple responses are allowed
+    const form = await Form.findOne({ where: { form_id: formId } });
+    if (!form) return res.status(404).json({ message: "Form not found" });
+
+    if (form.allow_multiple_responses === false) {
+      const existing = await Response.findOne({
+        where: { form_id: formId, respondent_email: respondentEmail }
+      });
+      if (existing) {
+        return res.status(400).json({ message: "You have already submitted a response for this form." });
+      }
+    }
 
     const response = await Response.create({
       form_id: formId,
